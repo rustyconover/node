@@ -105,8 +105,9 @@ class NodeBIO : public MemoryRetainer {
   // guess about the amount of buffer space that will be needed in the
   // next allocation this overhead is removed.
   inline void set_allocate_tls_hint(size_t size) {
-    if (size >= 16 * 1024) {
-      allocate_hint_ = ((size / (1024 * 16) + 1) * ((1026 * 16) + 5 + 32));
+    constexpr size_t kThreshold = 16 * 1024;
+    if (size >= kThreshold) {
+      allocate_hint_ = ((size / kThreshold + 1) * (kThreshold + 5 + 32));
     }
   }
 
