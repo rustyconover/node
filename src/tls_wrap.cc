@@ -776,15 +776,13 @@ int TLSWrap::DoWrite(WriteWrap* w,
     written = SSL_write(ssl_.get(), data.data(), length);
   } else {
     // Only one buffer: try to write directly, only store if it fails
-
-    crypto::NodeBIO::FromBIO(enc_out_)
-        ->set_allocate_tls_hint(bufs[nonempty_i].len);
-    written =
-        SSL_write(ssl_.get(), bufs[nonempty_i].base, bufs[nonempty_i].len);
+    uv_buf_t* buf = &bufs[nonempty_i];
+    crypto::NodeBIO::FromBIO(enc_out_)->set_allocate_tls_hint(buf->len);
+    written = SSL_write(ssl_.get(), buf->base, buf->len);
 
     if (written == -1) {
       data = env()->AllocateManaged(length);
-      memcpy(data.data(), bufs[nonempty_i].base, bufs[nonempty_i].len);
+      memcpy(data.data(), buf->base, buf->len);
     }
   }
 

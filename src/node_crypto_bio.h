@@ -101,13 +101,13 @@ class NodeBIO : public MemoryRetainer {
   // a MAC (up to 20 bytes for SSLv3, TLS 1.0, TLS 1.1, and up to 32 bytes
   // for TLS 1.2), and padding if a block cipher is used.  If there is a
   // large write this will result in potentially many buffers being
-  // allocated and gc'ed which can cause long pauses.   By providing a
+  // allocated and gc'ed which can cause long pauses. By providing a
   // guess about the amount of buffer space that will be needed in the
   // next allocation this overhead is removed.
   inline void set_allocate_tls_hint(size_t size) {
     constexpr size_t kThreshold = 16 * 1024;
     if (size >= kThreshold) {
-      allocate_hint_ = ((size / kThreshold + 1) * (kThreshold + 5 + 32));
+      allocate_hint_ = (size / kThreshold + 1) * (kThreshold + 5 + 32);
     }
   }
 
