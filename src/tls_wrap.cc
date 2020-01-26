@@ -719,13 +719,9 @@ int TLSWrap::DoWrite(WriteWrap* w,
       Debug(this, "No pending encrypted output, writing to underlying stream");
       CHECK_NULL(current_empty_write_);
       current_empty_write_ = w;
-      StreamWriteResult res =
-          underlying_stream()->Write(bufs, count, send_handle);
-      if (!res.async) {
-        env()->SetImmediate([this](Environment* env) {
-          OnStreamAfterWrite(current_empty_write_, 0);
-        }, object());
-      }
+      env()->SetImmediate([this](Environment* env) {
+        OnStreamAfterWrite(current_empty_write_, 0);
+      }, object());
       return 0;
     }
   }
