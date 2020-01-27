@@ -2188,6 +2188,8 @@ changes:
   * `lookup` {Function} Custom lookup function. **Default:** [`dns.lookup()`][].
   * `method` {string} A string specifying the HTTP request method. **Default:**
     `'GET'`.
+  * `noDelay` {boolean} A boolean with which to call [`socket.setNoDelay()`][]
+    when a socket connection is established.
   * `path` {string} Request path. Should include query string if any.
     E.G. `'/index.html?page=12'`. An exception is thrown when the request path
     contains illegal characters. Currently, only spaces are rejected but that
