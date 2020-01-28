@@ -100,6 +100,7 @@ void uv__stream_init(uv_loop_t* loop,
   QUEUE_INIT(&stream->write_queue);
   QUEUE_INIT(&stream->write_completed_queue);
   stream->write_queue_size = 0;
+  stream->last_read_size = 0;
 
   if (loop->emfile_fd == -1) {
     err = uv__open_cloexec("/dev/null", O_RDONLY);
@@ -1113,6 +1114,8 @@ static int uv__stream_recv_cmsg(uv_stream_t* stream, struct msghdr* msg) {
 # pragma clang diagnostic ignored "-Wvla-extension"
 #endif
 
+#define MAX_READ (1024 * 1024 * 2)
+#define DEFAULT_READ (1024 * 64)
 static void uv__read(uv_stream_t* stream) {
   uv_buf_t buf;
   ssize_t nread;
@@ -1140,7 +1143,14 @@ static void uv__read(uv_stream_t* stream) {
     assert(stream->alloc_cb != NULL);
 
     buf = uv_buf_init(NULL, 0);
-    stream->alloc_cb((uv_handle_t*)stream, 64 * 1024, &buf);
+    size_t bytes_to_alloc;
+    if (stream->last_read_size == 0 || stream->last_read_size < DEFAULT_READ) {
+      bytes_to_alloc = DEFAULT_READ;
+    } else {
+      bytes_to_alloc = MIN(stream->last_read_size * 2, MAX_READ);
+    }
+
+    stream->alloc_cb((uv_handle_t*)stream, bytes_to_alloc, &buf);
     if (buf.base == NULL || buf.len == 0) {
       /* User indicates it can't or won't handle the read. */
       stream->read_cb(stream, UV_ENOBUFS, &buf);
@@ -1155,6 +1165,7 @@ static void uv__read(uv_stream_t* stream) {
         nread = read(uv__stream_fd(stream), buf.base, buf.len);
       }
       while (nread < 0 && errno == EINTR);
+      stream->last_read_size = nread;
     } else {
       /* ipc uses recvmsg */
       msg.msg_flags = 0;
