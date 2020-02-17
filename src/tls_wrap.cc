@@ -727,10 +727,9 @@ int TLSWrap::DoWrite(WriteWrap* w,
       Debug(this, "No pending encrypted output, writing to underlying stream");
       CHECK_NULL(current_empty_write_);
       current_empty_write_ = w;
-      BaseObjectPtr<TLSWrap> strong_ref{this};
-      env()->SetImmediate([this, strong_ref](Environment* env) {
+      env()->SetImmediate([this](Environment* env) {
         OnStreamAfterWrite(current_empty_write_, 0);
-      });
+      }, object());
       return 0;
     }
   }
